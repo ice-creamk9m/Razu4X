@@ -1,171 +1,278 @@
-const fs = require("fs-extra");
 const axios = require("axios");
-const path = require("path");
-const { getStreamFromURL, randomString } = global.utils;
-const getFBInfo = require("@xaviabot/fb-downloader");
 
-function loadAutoLinkStates() {
-	try {
-		const data = fs.readFileSync("autolink.json", "utf8");
-		return JSON.parse(data);
-	} catch (err) {
-		return {};
-	}
-}
+const dApi = async () => {
+  const base = await axios.get(
+    "https://raw.githubusercontent.com/nazrul4x/Noobs/main/Apis.json"
+  );
+  return base.data.alldl;
+};
 
-function saveAutoLinkStates(states) {
-	fs.writeFileSync("autolink.json", JSON.stringify(states, null, 2));
-}
+module.exports.config = {
+  name: "autodown",
+  aliases: ["autolink","autodl"],
+  version: "1.6.9",
+  author: "Nazrul",
+  role: 0,
+  description: "Automatically download videos from supported platforms!",
+  category: "media",
+  countDown: 7,
+  guide: {
+    en: "Send a valid video link from supported platforms (TikTok, Facebook, YouTube, Twitter, Instagram, etc.), and the bot will download it automatically.",
+  },
+};
 
-let autoLinkStates = loadAutoLinkStates();
+module.exports.onStart = ({}) => {};
 
-module.exports = {
-	threadStates: {},
-	config: {
-		name: 'autodl',
-		version: '5.0',
-		author: 'cliff',
-		countDown: 5,
-		role: 0,
-		shortDescription: 'Auto video downloader for Instagram, Facebook, TikTok',
-		longDescription: '',
-		category: 'media',
-		guide: {
-			en: '{p}{n}',
-		}
-	},
-	onStart: async function ({ api, event }) {
-		const threadID = event.threadID;
+const platforms = {
+  Aparat: {
+    regex: /(?:https?:\/\/)?(?:www\.)?aparat\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Bandcamp: {
+    regex: /(?:https?:\/\/)?(?:www\.)?bandcamp\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Bilibili: {
+    regex: /(?:https?:\/\/)?(?:www\.)?bilibili\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Catbox: {
+    regex: /(?:https?:\/\/)?(?:www\.)?catbox\.moe/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Cloudinary: {
+    regex: /(?:https?:\/\/)?(?:www\.)?res\.cloudinary\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  DailyMotion: {
+    regex: /(?:https?:\/\/)?(?:www\.)?dailymotion\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  DeviantArt: {
+    regex: /(?:https?:\/\/)?(?:www\.)?deviantart\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Dropbox: {
+    regex: /(?:https?:\/\/)?(?:www\.)?dropbox\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Facebook: {
+    regex: /(?:https?:\/\/)?(?:www\.)?(facebook\.com|fb\.watch|facebook\.com\/share\/v)/,
+    endpoint: "/nazrul/fbDL?url=",
+  },
+  Flickr: {
+    regex: /(?:https?:\/\/)?(?:www\.)?flickr\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Giphy: {
+    regex: /(?:https?:\/\/)?(?:www\.)?giphy\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  GoogleDrive: {
+    regex: /(?:https?:\/\/)?(?:www\.)?drive\.google\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Imgur: {
+    regex: /(?:https?:\/\/)?(?:www\.)?imgur\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  ImgBB: {
+    regex: /(?:https?:\/\/)?(?:www\.)?imgbb\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Instagram: {
+    regex: /(?:https?:\/\/)?(?:www\.)?instagram\.com/,
+    endpoint: "/nazrul/instaDL?url=",
+  },
+  Kwai: {
+    regex: /(?:https?:\/\/)?(?:www\.)?kwai\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Likee: {
+    regex: /(?:https?:\/\/)?(?:www\.)?likee\.video/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  LinkedIn: {
+    regex: /(?:https?:\/\/)?(?:www\.)?linkedin\.com\/feed/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Mediafire: {
+    regex: /(?:https?:\/\/)?(?:www\.)?mediafire\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Mega: {
+    regex: /(?:https?:\/\/)?(?:www\.)?mega\.nz/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  MixCloud: {
+    regex: /(?:https?:\/\/)?(?:www\.)?mixcloud\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Moj: {
+    regex: /(?:https?:\/\/)?(?:www\.)?moj\.app/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Odnoklassniki: {
+    regex: /(?:https?:\/\/)?(?:www\.)?ok\.ru/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  OneDrive: {
+    regex: /(?:https?:\/\/)?(?:www\.)?onedrive\.live\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Pinterest: {
+    regex: /(?:https?:\/\/)?(?:www\.)?pinterest\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Pixeldrain: {
+    regex: /(?:https?:\/\/)?(?:www\.)?pixeldrain\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Pixiv: {
+    regex: /(?:https?:\/\/)?(?:www\.)?pixiv\.net/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  PostImage: {
+    regex: /(?:https?:\/\/)?(?:www\.)?postimg\.cc/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Reddit: {
+    regex: /(?:https?:\/\/)?(?:www\.)?reddit\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  ShareChat: {
+    regex: /(?:https?:\/\/)?(?:www\.)?sharechat\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  SnapSave: {
+    regex: /(?:https?:\/\/)?(?:www\.)?snapsave\.app/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  SnapTik: {
+    regex: /(?:https?:\/\/)?(?:www\.)?snaptik\.app/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  SoundCloud: {
+    regex: /(?:https?:\/\/)?(?:www\.)?soundcloud\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Streamable: {
+    regex: /(?:https?:\/\/)?(?:www\.)?streamable\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Streamtape: {
+    regex: /(?:https?:\/\/)?(?:www\.)?streamtape\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Telegram: {
+    regex: /(?:https?:\/\/)?(?:www\.)?t\.me/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  TikTok: {
+    regex: /(?:https?:\/\/)?(?:www\.)?tiktok\.com/,
+    endpoint: "/nazrul/tikDL?url=",
+  },
+  TikTokLite: {
+    regex: /(?:https?:\/\/)?(?:www\.)?vm\.tiktok\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Triller: {
+    regex: /(?:https?:\/\/)?(?:www\.)?triller\.co/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Twitch: {
+    regex: /(?:https?:\/\/)?(?:www\.)?twitch\.tv/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Twitter: {
+    regex: /(?:https?:\/\/)?(?:www\.)?(twitter\.com|x\.com)/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  Vimeo: {
+    regex: /(?:https?:\/\/)?(?:www\.)?vimeo\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  VK: {
+    regex: /(?:https?:\/\/)?(?:www\.)?vk\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  WeTransfer: {
+    regex: /(?:https?:\/\/)?(?:www\.)?wetransfer\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  YouTube: {
+    regex: /(?:https?:\/\/)?(?:www\.)?(youtube\.com|youtu\.be)/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+  ZippyShare: {
+    regex: /(?:https?:\/\/)?(?:www\.)?zippyshare\.com/,
+    endpoint: "/nazrul/alldl?url=",
+  },
+};
 
-		if (!autoLinkStates[threadID]) {
-			autoLinkStates[threadID] = 'on'; 
-			saveAutoLinkStates(autoLinkStates);
-		}
+const detectPlatform = (url) => {
+  for (const [platform, data] of Object.entries(platforms)) {
+    if (data.regex.test(url)) {
+      return { platform, endpoint: data.endpoint };
+    }
+  }
+  return null;
+};
 
-		if (!this.threadStates[threadID]) {
-			this.threadStates[threadID] = {};
-		}
+const downloadVideo = async (apiUrl, url) => {
+  const match = detectPlatform(url);
+  if (!match) {
+    throw new Error("No matching platform for the provided URL.");
+  }
 
-		if (event.body.toLowerCase().includes('autolink off')) {
-			autoLinkStates[threadID] = 'off';
-			saveAutoLinkStates(autoLinkStates);
-			api.sendMessage("AutoLink is now turned off for this chat.", event.threadID, event.messageID);
-		} else if (event.body.toLowerCase().includes('autolink on')) {
-			autoLinkStates[threadID] = 'on';
-			saveAutoLinkStates(autoLinkStates);
-			api.sendMessage("AutoLink is now turned on for this chat.", event.threadID, event.messageID);
-		}
-	},
-	onChat: async function ({ api, event }) {
-		const threadID = event.threadID;
+  const { platform, endpoint } = match;
+  const endpointUrl = `${apiUrl}${endpoint}${encodeURIComponent(url)}`;
+  console.log(`🔗 Fetching from: ${endpointUrl}`);
 
-		if (this.checkLink(event.body)) {
-			const { url } = this.checkLink(event.body);
-			console.log(`Attempting to download from URL: ${url}`);
-			if (autoLinkStates[threadID] === 'on' || !autoLinkStates[threadID]) {
-				this.downLoad(url, api, event);
-			} else {
-				api.sendMessage("", event.threadID, event.messageID);
-			}
-			api.setMessageReaction("🙆", event.messageID, (err) => {}, true);
-		}
-	},
-	downLoad: function (url, api, event) {
-		const time = Date.now();
-		const path = __dirname + `/cache/${time}.mp4`;
+  try {
+    const res = await axios.get(endpointUrl);
+    console.log(`✅ API Response:`, res.data);
 
-		if (url.includes("instagram")) {
-			this.downloadInstagram(url, api, event, path);
-		} else if (url.includes("facebook")) {
-			this.downloadFacebook(url, api, event, path);
-		} else if (url.includes("tiktok")) {
-			this.downloadTikTok(url, api, event, path);
-		}
-	},
-	downloadInstagram: async function (url, api, event, path) {
-		try {
-			const res = await axios.get(`https://cprojectapisjonellv2.adaptable.app/api/fbdl?url=${encodeURIComponent(url)}`);
-			const videoUrl = res.data.url.data[0].url;
-			const response = await axios({
-				method: "GET",
-				url: videoUrl,
-				responseType: "arraybuffer"
-			});
-			fs.writeFileSync(path, Buffer.from(response.data, "utf-8"));
-			if (fs.statSync(path).size / 1024 / 1024 > 25) {
-				return api.sendMessage("The file is too large, cannot be sent", event.threadID, () => fs.unlinkSync(path), event.messageID);
-			}
+    const videoUrl = res.data?.videos?.[0]?.url || res.data?.url;
+    if (videoUrl) {
+      return { downloadUrl: videoUrl, platform };
+    }
+  } catch (error) {
+    console.error(`❌ Error fetching data from ${endpointUrl}:`, error.message);
+    throw new Error("Download link not found.");
+  }
+  throw new Error("No video URL found in the API response.");
+};
 
-			api.sendMessage({
-					body: `𝖠𝗎𝗍𝗈 𝖣𝗈𝗐𝗇 Instagram\n\n𝗬𝗔𝗭𝗞𝗬 𝗕𝗢𝗧 𝟭.𝟬.𝟬𝘃`,
-				attachment: fs.createReadStream(path)
-			}, event.threadID, () => fs.unlinkSync(path), event.messageID);
-		} catch (err) {
-			console.error(err);
-		}
-	},
-	downloadFacebook: async function (url, api, event, path) {
-		try {
-			const res = await getFBInfo(url);
-			if (res.success && res.download && res.download.length > 0) {
-				const videoUrl = res.download[0].url;
-				const response = await axios({
-					method: "GET",
-					url: videoUrl,
-					responseType: "stream"
-				});
-				if (response.headers['content-length'] > 87031808) {
-					return api.sendMessage("The file is too large, cannot be sent", event.threadID, () => fs.unlinkSync(path), event.messageID);
-				}
-				response.data.pipe(fs.createWriteStream(path));
-				response.data.on('end', async () => {
-					api.sendMessage({
-						attachment: fs.createReadStream(path)
-					}, event.threadID, () => fs.unlinkSync(path), event.messageID);
-				});
-			} else {
-				api.sendMessage("", event.threadID, event.messageID);
-			}
-		} catch (err) {
-			console.error(err);
-		}
-	},
-	downloadTikTok: async function (url, api, event, path) {
-		try {
-			const regEx_tiktok = /https:\/\/(www\.|vt\.)?tiktok\.com\//;
-			if (regEx_tiktok.test(url)) {
-				api.setMessageReaction("📥", event.messageID, () => {}, true);
-				const response = await axios.post(`https://www.tikwm.com/api/`, { url: url });
-				const data = response.data.data;
-				const videoStream = await axios({
-					method: 'get',
-					url: data.play,
-					responseType: 'stream'
-				});
-				const fileName = `TikTok-${Date.now()}.mp4`;
-				const videoFile = fs.createWriteStream(path);
+module.exports.onChat = async ({ api, event }) => {
+  const { body, threadID, messageID } = event;
 
-				videoStream.data.pipe(videoFile);
+  if (!body) return;
 
-				videoFile.on('finish', () => {
-					videoFile.close(() => {
-						console.log('Downloaded video file.');
-						api.sendMessage({
-							body: `𝖠𝗎𝗍𝗈 𝖣𝗈𝗐𝗇 𝖳𝗂𝗄𝖳𝗈𝗄 \n\n𝙲𝚘𝚗𝚝𝚎𝚗𝚝: ${data.title}\n\n𝙻𝚒𝚔𝚎𝚜: ${data.digg_count}\n\n𝙲𝚘𝚖𝚖𝚎𝚗𝚝𝚜: ${data.comment_count}\n\n🌊ʸᵒᵘʳ Icₑ cᵣₑₐₘ🍨`,
-							attachment: fs.createReadStream(path)
-						}, event.threadID, () => {
-							fs.unlinkSync(path);
-						});
-					});
-				});
-			}
-		} catch (error) {
-			api.sendMessage(`Error when trying to download the TikTok video: ${error.message}`, event.threadID, event.messageID);
-		}
-	},
-	checkLink: function (url) {
-		if (url.includes("facebook") || url.includes("tiktok") || url.includes("instagram")) {
-			return { url: url };
-		}
-	}
+  const urlMatch = body.match(/https?:\/\/[^\s]+/);
+  if (!urlMatch) return;
+
+  const url = urlMatch[0];
+
+  const platformMatch = detectPlatform(url);
+  if (!platformMatch) return; // Ignore unsupported URLs
+
+  try {
+    const apiUrl = await dApi();
+
+    const { downloadUrl, platform } = await downloadVideo(apiUrl, url);
+
+    const videoStream = await axios.get(downloadUrl, { responseType: "stream" });
+
+    api.sendMessage(
+      {
+        body: `✅ Successfully downloaded the video!\n🔖 Platform: ${platform}`,
+        attachment: [videoStream.data],
+      },
+      threadID,
+      messageID
+    );
+  } catch (error) {
+    console.error(`❌ Error while processing the URL:`, error.message);
+  }
 };
